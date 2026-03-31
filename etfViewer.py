@@ -99,9 +99,9 @@ def get_dca_dates(data, freq):
     elif freq == "Weekly":
         return data.resample("W-FRI").first().index
     elif freq == "Monthly":
-        return data.resample("ME").first().index
+        return data.resample("ME").first().index  # month-end
     elif freq == "Yearly":
-        return data.resample("YE").first().index
+        return data.resample("YE").first().index  # year-end
     return data.index
 
 # -------------------------
@@ -128,13 +128,15 @@ lump_drawdown = lump_df.apply(calculate_drawdown)
 dca_dates = get_dca_dates(data, dca_frequency)
 
 recurring_results = {}
+recurring_cumulative_investment = {}
 for ticker in tickers:
     if ticker not in data.columns:
         continue
     prices = data[ticker].dropna()
     shares = 0
     values = []
-    cumulative_invested = 0
+    cumulative_invested = []
+    invested = 0
     valid_dates = dca_dates[dca_dates.isin(prices.index)]
     num = len(valid_dates)
     if num == 0:
@@ -143,17 +145,20 @@ for ticker in tickers:
     for date in prices.index:
         if date in valid_dates:
             shares += invest_each / prices.loc[date]
-            cumulative_invested += invest_each
+            invested += invest_each
         portfolio_value = shares * prices.loc[date]
         if return_type == "Dollar Value":
             values.append(portfolio_value)
         else:
-            pct_return = (portfolio_value / cumulative_invested - 1) * 100 if cumulative_invested > 0 else 0
+            pct_return = (portfolio_value / invested - 1) * 100 if invested > 0 else 0
             values.append(pct_return)
+        cumulative_invested.append(invested)
     recurring_results[ticker] = pd.Series(values, index=prices.index)
+    recurring_cumulative_investment[ticker] = pd.Series(cumulative_invested, index=prices.index)
 
 recurring_df = pd.DataFrame(recurring_results)
 recurring_drawdown = recurring_df.apply(calculate_drawdown)
+recurring_cumulative_df = pd.DataFrame(recurring_cumulative_investment)
 
 # -------------------------
 # Display Charts
@@ -175,6 +180,12 @@ with col4:
     plot_chart(recurring_drawdown, "Drawdown (%)", "Drawdown (%)")
 
 # -------------------------
+# Cumulative Investment Graph
+# -------------------------
+st.header("💰 DCA Cumulative Investment Over Time")
+plot_chart(recurring_cumulative_df, "Cumulative Invested Amount ($)", "Invested Amount ($)")
+
+# -------------------------
 # Snapshot Table
 # -------------------------
 st.header("📅 Snapshot")
@@ -190,3 +201,5 @@ st.subheader("Lump Sum")
 st.write(lump_df.loc[:snapshot_date].tail(1).T)
 st.subheader("Recurring")
 st.write(recurring_df.loc[:snapshot_date].tail(1).T)
+st.subheader("DCA Cumulative Invested")
+st.write(recurring_cumulative_df.loc[:snapshot_date].tail(1).T)
