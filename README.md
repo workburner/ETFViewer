@@ -18,6 +18,6 @@ pip install -r requirements.txt
 2. Run the app:
 
 ```bash
-streamlit run app.py
+streamlit run etfViewer.py
 ```
 3. Open the public URL provided by Streamlit Cloud if deployed.
