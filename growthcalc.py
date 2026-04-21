@@ -23,10 +23,10 @@ def investment_growth(initial_amount, yearly_input, growth_rate, years):
 
 
 # Example usage
-initial_amount = 370000
-yearly_input = 80000
+initial_amount = 300000
+yearly_input = 70000
 growth_rate = 0.06
-years = 5
+years = 3
 
 totals, gains, gain_percents, yearly_gain_percents = investment_growth(
     initial_amount, yearly_input, growth_rate, years
